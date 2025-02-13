@@ -1,0 +1,32 @@
+-- use schema3;
+
+SELECT *, (SELECT customer_id FROM orders WHERE order_details.order_id = orders.id) AS customer_id
+FROM order_details;
+
+SELECT * FROM order_details 
+WHERE order_id IN (select id from orders where shipper_id = 3);
+
+SELECT order_id, AVG(quantity) AS avg_quantity
+FROM (select order_id, quantity from order_details where quantity > 10) AS temp_table
+GROUP BY order_id;
+
+with temp as (select id from orders where shipper_id = 3)
+SELECT * FROM order_details 
+WHERE order_id IN (SELECT * FROM temp);
+
+
+DROP FUNCTION IF EXISTS x_ratio;
+
+DELIMITER //
+CREATE FUNCTION x_ratio(quantity FLOAT, price FLOAT)
+RETURNS FLOAT
+no sql
+BEGIN
+    DECLARE result FLOAT;
+    SET result = quantity / price;
+    RETURN result;
+END //
+DELIMITER ;
+
+SELECT order_id, quantity, price, x_ratio(quantity, price) as quantity_price_ratio 
+FROM order_details JOIN products ON order_details.product_id = products.id;
